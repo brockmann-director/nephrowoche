@@ -89,6 +89,10 @@ alter table nw_events  enable row level security;
 alter table nw_state   enable row level security;
 alter table nw_missing enable row level security;
 revoke all on nw_readers, nw_issues, nw_items, nw_events, nw_state, nw_missing from anon, authenticated;
+-- Der Wochenlauf (geheimer service_role-Schlüssel) braucht Vollzugriff, auch wenn
+-- "Grant API access to new tables automatically" beim Anlegen des Projekts aus war.
+grant usage on schema public to anon, authenticated, service_role;
+grant all on nw_readers, nw_issues, nw_items, nw_events, nw_state, nw_missing to service_role;
 
 -- ---------- Funktionen ----------
 create or replace function nw_who(p_token text) returns uuid
