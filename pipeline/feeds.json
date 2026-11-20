@@ -1,0 +1,17 @@
+{
+  "_hinweis": "RSS/Atom-Quellen des Wochenlaufs. filter=true heißt: nur Meldungen mit Nieren-Stichworten. Fällt eine Quelle aus, läuft der Rest weiter; der Lauf meldet sie unter stats.failed.",
+  "feeds": [
+    {"name": "FDA Pressemitteilungen", "url": "https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/press-releases/rss.xml", "kind": "drug", "filter": true},
+    {"name": "FDA MedWatch Sicherheitsmeldungen", "url": "https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/medwatch/rss.xml", "kind": "drug", "filter": true},
+    {"name": "EMA Neuigkeiten", "url": "https://www.ema.europa.eu/en/news.xml", "kind": "drug", "filter": true},
+    {"name": "Healio Nephrologie", "url": "https://www.healio.com/sws/feed/news/nephrology", "kind": "news", "filter": false},
+    {"name": "ASN Kidney News", "url": "https://www.kidneynews.org/rss", "kind": "news", "filter": false},
+    {"name": "Kidney International (Online first)", "url": "https://www.kidney-international.org/inpress.rss", "kind": "study", "filter": false},
+    {"name": "AJKD (Online first)", "url": "https://www.ajkd.org/inpress.rss", "kind": "study", "filter": false},
+    {"name": "Peritoneal Dialysis International", "url": "https://journals.sagepub.com/action/showFeed?ui=0&mi=ehikzz&ai=2b4&jc=ptda&type=etoc&feed=rss", "kind": "study", "filter": false},
+    {"name": "NEJM", "url": "https://www.nejm.org/action/showFeed?jc=nejm&type=etoc&feed=rss", "kind": "study", "filter": true},
+    {"name": "The Lancet", "url": "https://www.thelancet.com/rssfeed/lancet_online.xml", "kind": "study", "filter": true},
+    {"name": "JAMA", "url": "https://jamanetwork.com/rss/site_3/67.xml", "kind": "study", "filter": true},
+    {"name": "BMJ", "url": "https://www.bmj.com/rss/research.xml", "kind": "study", "filter": true}
+  ]
+}

@@ -1,0 +1,43 @@
+name: Wochenlauf
+
+on:
+  schedule:
+    - cron: "0 1 * * 0"   # Sonntag 01:00 UTC (02:00 Winterzeit / 03:00 Sommerzeit in Berlin)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Nur Quellen testen (ohne KI, ohne Datenbank)"
+        type: boolean
+        default: true
+
+concurrency:
+  group: wochenlauf
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r pipeline/requirements.txt
+      - name: Quellen testen
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: python pipeline/weekly.py --dry-run
+      - name: Kandidaten ablegen
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: kandidaten
+          path: out/candidates.json
+          retention-days: 3
+      - name: Wochenausgabe erstellen
+        if: ${{ github.event_name == 'schedule' || !inputs.dry_run }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python pipeline/weekly.py

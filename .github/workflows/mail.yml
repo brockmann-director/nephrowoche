@@ -1,0 +1,35 @@
+name: Montags-Mail
+
+on:
+  schedule:
+    - cron: "0 5 * * 1"   # 07:00 Berlin im Sommer
+    - cron: "0 6 * * 1"   # 07:00 Berlin im Winter (das Skript prüft die Berliner Uhrzeit)
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Sofort senden (Test)"
+        type: boolean
+        default: true
+
+jobs:
+  mail:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Mail senden
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          APP_LINK: ${{ secrets.APP_LINK }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_BCC: ${{ secrets.MAIL_BCC }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+        run: python pipeline/mail.py ${{ (github.event_name == 'workflow_dispatch' && inputs.force) && '--force' || '' }}
