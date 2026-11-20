@@ -2,18 +2,6 @@
  "_hinweis": "RSS/Atom-Quellen des Wochenlaufs. filter=true heißt: nur Meldungen mit Nieren-Stichworten. Fällt eine Quelle aus, läuft der Rest weiter; der Lauf meldet sie unter stats.failed.",
  "feeds": [
   {
-   "name": "FDA Pressemitteilungen",
-   "url": "https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/press-releases/rss.xml",
-   "kind": "drug",
-   "filter": true
-  },
-  {
-   "name": "FDA MedWatch Sicherheitsmeldungen",
-   "url": "https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/medwatch/rss.xml",
-   "kind": "drug",
-   "filter": true
-  },
-  {
    "name": "EMA Neuigkeiten",
    "url": "https://www.ema.europa.eu/en/news.xml",
    "kind": "drug",
@@ -68,34 +56,10 @@
    "filter": true
   },
   {
-   "name": "Renal & Urology News",
-   "url": "https://www.renalandurologynews.com/feed/",
-   "kind": "news",
-   "filter": true
-  },
-  {
    "name": "Deutsches Ärzteblatt",
    "url": "https://www.aerzteblatt.de/rss/news.asp",
    "kind": "news",
    "filter": true
-  },
-  {
-   "name": "BfArM Risikoinformationen",
-   "url": "https://www.bfarm.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/RSSNewsfeed_Risikoinformationen.xml",
-   "kind": "drug",
-   "filter": true
-  },
-  {
-   "name": "AkdÄ Arzneimittelsicherheit",
-   "url": "https://www.akdae.de/rss.xml",
-   "kind": "drug",
-   "filter": true
-  },
-  {
-   "name": "Clin Kidney J (Advance)",
-   "url": "https://academic.oup.com/rss/site_6136/advanceAccess_3999.xml",
-   "kind": "study",
-   "filter": false
   }
  ]
 }
