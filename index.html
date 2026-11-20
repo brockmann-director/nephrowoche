@@ -56,7 +56,19 @@ nav.tabs .count{font-weight:400;opacity:.8}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .sep{width:1px;height:28px;background:var(--line);margin-inline:.3rem}
 .grid{display:grid;grid-template-columns:minmax(0,1fr);gap:1.2rem}
-@media (min-width:1000px){.grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr)}.detail{position:sticky;top:1rem;align-self:start;max-height:calc(100vh - 2rem);overflow:auto}}
+@media (min-width:1000px){
+  .grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr)}
+  .detail{position:sticky;top:1rem;align-self:start;max-height:calc(100vh - 2rem);overflow:auto}
+  /* Zwei Spalten, die unabhängig scrollen: Kopf und Reiter bleiben stehen,
+     links die Liste (mit Überblick und Filtern), rechts der geöffnete Eintrag. */
+  .wrap.split{height:100vh;height:100dvh;display:flex;flex-direction:column;padding-bottom:0;box-sizing:border-box}
+  .wrap.split>header,.wrap.split>nav,.wrap.split>.note,.wrap.split>footer{flex:none}
+  .wrap.split>footer{margin-top:.6rem;padding-block:.5rem}
+  .wrap.split main{flex:1;min-height:0}
+  .wrap.split .grid.full{height:100%;align-items:stretch}
+  .wrap.split .grid.full>.col{overflow-y:auto;min-height:0;overscroll-behavior:contain;padding:2px 10px 1.5rem 2px}
+  .wrap.split .grid.full>.detail{position:static;max-height:none;align-self:stretch}
+}
 .list{display:flex;flex-direction:column;gap:.5rem;min-width:0}
 .item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:.2rem .8rem;align-items:start;background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:.7rem .8rem;cursor:pointer;text-align:left}
 .item.small{padding:.5rem .7rem}
@@ -150,7 +162,7 @@ dialog h2{font-family:var(--f-head);font-size:1.2rem;margin:0 0 .8rem}
 <script src="config.js"></script>
 <script src="demo.js"></script>
 <script>
-const VERSION="1.0";
+const VERSION="1.1";
 const ICON={
  star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>',
  starOn:'<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>',
@@ -288,6 +300,8 @@ function viewWeek(){
  const old=S.current&&d.issue.id!==S.current;
  const lead=d.issue.lead||[], trends=d.issue.trends||[];
  return `${old?`<div class="note">Sie sehen eine frühere Ausgabe (${esc(d.issue.label)}). <button class="chip" data-act="current">Zur aktuellen Ausgabe</button></div>`:""}
+  <div class="grid full">
+   <div class="col" id="leftCol">
   ${lead.length?`<div class="lead"><h2>Das Wichtigste der Woche</h2><ol>${lead.map(l=>`<li><a data-goto="${esc(l.id)}"><b>${esc(l.title)}:</b> ${esc(l.text)}</a></li>`).join("")}</ol>
    ${trends.length?`<div class="trend"><b>Im Trend:</b> ${trends.map(t=>`<span class="t">${esc(t.topic)} (${t.count})</span>`).join("")}</div>`:""}</div>`:""}
   <div class="filters" role="group" aria-label="Filter">
@@ -298,13 +312,11 @@ function viewWeek(){
    <span class="sep" aria-hidden="true"></span>
    <button class="chip" data-act="hideRead" aria-pressed="${S.hideRead}">Gelesene ausblenden</button>
   </div>
-  <div class="grid">
-   <div>
     <div class="list">${top.length?top.map((x,i)=>itemRow(x,i,S.sel)).join(""):`<p class="empty">Keine Einträge für diesen Filter.</p>`}</div>
     ${rest.length?`<div class="rest"><h2>Außerdem diese Woche</h2><div class="list">${rest.map((x,i)=>itemRow(x,i,S.sel,true)).join("")}</div></div>`:""}
     ${missingHtml()}
    </div>
-   <article class="detail" id="detail" aria-live="polite">${detailHtml(items.find(x=>x.id===S.sel))}</article>
+   <article class="detail col" id="detail" aria-live="polite">${detailHtml(items.find(x=>x.id===S.sel))}</article>
   </div>`;
 }
 function missingHtml(){
@@ -320,9 +332,9 @@ function viewMerk(){
  const ms=S.starred;
  if(!ms.length) return `<div class="page"><p class="empty" style="padding:0">Noch nichts gemerkt. Bei einem Eintrag auf den Stern tippen.</p></div>`;
  const sel=ms.find(x=>x.id===S.merkSel)||ms[0];
- return `<div class="filters"><button class="btn" data-act="print-merk">Merkliste drucken / als PDF</button></div>
-  <div class="grid"><div class="list">${ms.map((x,i)=>itemRow(x,i,sel.id)).join("")}</div>
-  <article class="detail">${detailHtml(sel)}</article></div>`;
+ return `<div class="grid full"><div class="col" id="leftCol"><div class="filters"><button class="btn" data-act="print-merk">Merkliste drucken / als PDF</button></div>
+  <div class="list">${ms.map((x,i)=>itemRow(x,i,sel.id)).join("")}</div></div>
+  <article class="detail col" id="detail">${detailHtml(sel)}</article></div>`;
 }
 function viewFort(){
  const evs=(S.data&&S.data.events)||[];
@@ -367,6 +379,10 @@ function render(){
  else if(S.tab==="merk") body=viewMerk();
  else if(S.tab==="fort") body=viewFort();
  else body=viewArchiv();
+ const lc=document.getElementById("leftCol"),dc=document.getElementById("detail");
+ const keep={left:lc?lc.scrollTop:0,detail:dc?dc.scrollTop:0,sel:S.tab+":"+(S.tab==="merk"?S.merkSel:S.sel)};
+ const split=/class="grid full"/.test(body);
+ app.classList.toggle("split",split);
  app.innerHTML=`<header class="top"><div class="brand"><h1>NephroWoche</h1>
    <p>${esc([label?"Ausgabe "+label:"",name?"für "+name:""].filter(Boolean).join(" · "))}</p></div>
    <button class="btn" data-act="settings" aria-label="Einstellungen" title="Einstellungen">${ICON.gear}</button></header>
@@ -375,8 +391,12 @@ function render(){
   </nav>
   ${DEMO?`<div class="note">Beispielausgabe mit Daten aus dem Klick-Dummy (keine echte Wochenausgabe). Merken und Gelesen werden hier nur in diesem Browser gespeichert.</div>`:""}
   ${S.err?`<div class="note err">${esc(S.err)} <button class="chip" data-act="retry">Neu laden</button></div>`:""}
-  ${body}
+  <main id="main">${body}</main>
   <footer><span>KI-Zusammenfassungen aus Abstracts ersetzen nicht das Original. Jeder Eintrag verlinkt seine Quelle.</span><span>Version ${VERSION}</span></footer>`;
+ const lc2=document.getElementById("leftCol"),dc2=document.getElementById("detail");
+ if(lc2&&S.lastKey&&S.lastKey.split(":")[0]===S.tab) lc2.scrollTop=keep.left;
+ if(dc2&&S.lastKey===keep.sel) dc2.scrollTop=keep.detail;
+ S.lastKey=S.tab+":"+(S.tab==="merk"?S.merkSel:S.sel);
 }
 
 // ---------- Drucken / PDF ----------
