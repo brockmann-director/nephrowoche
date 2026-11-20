@@ -37,7 +37,8 @@ nennt die App nie selbst, sondern verweist auf Fachinformation und dosing.de.
    | `SUPABASE_SERVICE_KEY` | *secret/service_role key* (nie in den Code!) |
    | `APP_LINK` | der persönliche Link aus Schritt 3 |
    | `MAIL_TO` | Empfängeradresse |
-   | `MAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Postfach, über das die Mail verschickt wird (z. B. Strato: `smtp.strato.de`, Port `465`) |
+   | `SMTP_USER`, `SMTP_PASS` | Adresse und Passwort des Postfachs, über das die Mail verschickt wird |
+   | `SMTP_HOST`, `SMTP_PORT`, `MAIL_FROM` | optional, Standard: `smtp.strato.de`, `465`, Absender = `SMTP_USER` |
    | `MAIL_BCC` | optional, Kopie an sich selbst |
 
 5. **Test:** *Actions → Wochenlauf → Run workflow*. Mit Häkchen „Nur Quellen testen“ werden nur die Quellen

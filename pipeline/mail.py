@@ -3,8 +3,8 @@
 Läuft per GitHub Actions montags zweimal (05:00 und 06:00 UTC) und verschickt nur, wenn es in Berlin
 gerade 7 Uhr ist (so stimmt es in Sommer- und Winterzeit). --force verschickt sofort (zum Testen).
 
-Geheimnisse: SUPABASE_URL, SUPABASE_SERVICE_KEY, APP_LINK (persönlicher Link), MAIL_TO,
-SMTP_HOST, SMTP_PORT (465), SMTP_USER, SMTP_PASS, MAIL_FROM. Optional MAIL_BCC.
+Geheimnisse: SUPABASE_URL, SUPABASE_SERVICE_KEY, APP_LINK (persönlicher Link), MAIL_TO, SMTP_USER, SMTP_PASS.
+Optional: SMTP_HOST (Standard smtp.strato.de), SMTP_PORT (465), MAIL_FROM (Standard = SMTP_USER), MAIL_BCC.
 """
 from __future__ import annotations
 
@@ -78,7 +78,7 @@ def main() -> int:
 </div></body></html>"""
 
     msg = EmailMessage()
-    sender = os.environ["MAIL_FROM"].strip()
+    sender = (os.environ.get("MAIL_FROM") or os.environ["SMTP_USER"]).strip()
     msg["From"] = formataddr(("NephroWoche", sender))
     msg["To"] = os.environ["MAIL_TO"].strip()
     if os.environ.get("MAIL_BCC", "").strip():
@@ -88,7 +88,7 @@ def main() -> int:
     msg.set_content("\n".join(text_lines))
     msg.add_alternative(body_html, subtype="html")
 
-    host = os.environ["SMTP_HOST"].strip()
+    host = (os.environ.get("SMTP_HOST") or "smtp.strato.de").strip()
     port = int(os.environ.get("SMTP_PORT", "465") or 465)
     ctx = ssl.create_default_context()
     if port == 465:
