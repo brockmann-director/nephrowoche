@@ -16,6 +16,7 @@ import os
 import pathlib
 import re
 import sys
+import urllib.parse
 import zoneinfo
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
@@ -88,7 +89,7 @@ def main() -> int:
     if not args.dry_run:
         from db import DB
         db = DB()
-    seen_ids = db.recent_item_ids((today - dt.timedelta(days=60)).isoformat()) if db else set()
+    seen_ids = db.recent_item_ids((today - dt.timedelta(days=60)).isoformat(), except_issue=issue_id) if db else set()
 
     def norm(t: str) -> str:
         return re.sub(r"[^a-z0-9]", "", t.lower())[:90]
@@ -167,7 +168,7 @@ def main() -> int:
 
     # Trend: Themen dieser Woche gegen die letzten Ausgaben
     week_topics = collections.Counter(x["topic"] for x in items if x["score"] >= 3 and x["topic"])
-    hist = db.recent_topics()
+    hist = db.recent_topics(except_issue=issue_id)
     n_hist = max(1, len({h["issue_id"] for h in hist}))
     hist_c = collections.Counter(h["topic"] for h in hist)
     trend_val = {}
@@ -205,6 +206,10 @@ def main() -> int:
     db.upsert("nw_issues", [{"id": issue_id, "week_label": label, "lead": lead, "trends": trends,
                              "stats": stats, "published_at": None}])
     db.delete("nw_events", f"issue_id=eq.{issue_id}")
+    # Wiederholter Lauf für dieselbe Woche: alte Einträge, die nicht mehr dabei sind, entfernen
+    stale = db.item_ids_of(issue_id) - {r["id"] for r in rows}
+    for sid in stale:
+        db.delete("nw_items", "id=eq." + urllib.parse.quote(sid))
     db.upsert("nw_items", rows)
     db.upsert("nw_events", [{"issue_id": issue_id, "title": e["title"], "organizer": e["organizer"],
                              "starts_at": to_ts(e["start"]), "ends_at": to_ts(e["end"]), "cme": e["cme"],

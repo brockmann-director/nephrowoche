@@ -46,12 +46,22 @@ class DB:
 
     # ------------------------------------------------------------ Abfragen für den Lauf
 
-    def recent_item_ids(self, since_iso: str) -> set[str]:
-        rows = self.select("nw_items", "select=id&created_at=gte." + urllib.parse.quote(since_iso))
+    def recent_item_ids(self, since_iso: str, except_issue: str = "") -> set[str]:
+        q = "select=id&created_at=gte." + urllib.parse.quote(since_iso)
+        if except_issue:
+            q += "&issue_id=neq." + urllib.parse.quote(except_issue)
+        rows = self.select("nw_items", q)
         return {r["id"] for r in rows or []}
 
-    def recent_topics(self, issues: int = 8) -> list[dict]:
-        iss = self.select("nw_issues", f"select=id&published_at=not.is.null&order=published_at.desc&limit={issues}") or []
+    def item_ids_of(self, issue_id: str) -> set[str]:
+        rows = self.select("nw_items", "select=id&issue_id=eq." + urllib.parse.quote(issue_id))
+        return {r["id"] for r in rows or []}
+
+    def recent_topics(self, issues: int = 8, except_issue: str = "") -> list[dict]:
+        q = f"select=id&published_at=not.is.null&order=published_at.desc&limit={issues}"
+        if except_issue:
+            q += "&id=neq." + urllib.parse.quote(except_issue)
+        iss = self.select("nw_issues", q) or []
         if not iss:
             return []
         ids = ",".join(urllib.parse.quote(i["id"]) for i in iss)
