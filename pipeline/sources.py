@@ -16,7 +16,7 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 
-UA = "NephroWoche/1.0 (weekly literature digest; non-commercial)"
+UA = "Mozilla/5.0 (compatible; NephroWoche/1.0; weekly literature digest)"
 
 
 def http_get(url: str, data: bytes | None = None, timeout: int = 60, tries: int = 3) -> bytes:
@@ -214,35 +214,51 @@ KIDNEY_WORDS = re.compile(
     re.I)
 
 
+def _local(tag: str) -> str:
+    return tag.rsplit("}", 1)[-1].lower()
+
+
+def _child(el, *names: str) -> str:
+    for c in el:
+        if _local(c.tag) in names:
+            return (c.text or "").strip()
+    return ""
+
+
 def rss(feed: dict, start: dt.date, end: dt.date) -> list[dict]:
+    """RSS 2.0, RSS 1.0 (RDF, z. B. SAGE) und Atom, unabhängig von Namensräumen."""
     raw = http_get(feed["url"], timeout=45)
     root = ET.fromstring(raw)
-    ns = {"a": "http://www.w3.org/2005/Atom"}
-    entries = root.findall(".//item") or root.findall(".//a:entry", ns)
+    entries = [e for e in root.iter() if _local(e.tag) in ("item", "entry")]
     out = []
     for e in entries:
-        title = clean(e.findtext("title") or e.findtext("a:title", namespaces=ns))
-        link = (e.findtext("link") or "").strip()
+        title = clean(_child(e, "title"))
+        link = _child(e, "link")
         if not link:
-            le = e.find("a:link", ns)
-            link = le.get("href") if le is not None else ""
-        desc = clean(e.findtext("description") or e.findtext("a:summary", namespaces=ns)
-                     or e.findtext("a:content", namespaces=ns)
-                     or e.findtext("{http://purl.org/rss/1.0/modules/content/}encoded"))
-        date = _parse_date(e.findtext("pubDate") or e.findtext("{http://purl.org/dc/elements/1.1/}date")
-                           or e.findtext("a:updated", namespaces=ns) or e.findtext("a:published", namespaces=ns))
+            for c in e:
+                if _local(c.tag) == "link" and c.get("href") and c.get("rel", "alternate") == "alternate":
+                    link = c.get("href")
+                    break
+        link = link or e.get("{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about", "")
+        desc = clean(_child(e, "description", "summary", "encoded", "content"))
+        date = _parse_date(_child(e, "pubdate", "date", "updated", "published", "coverdate"))
         if date and not (start <= date <= end):
             continue
         if not title or not link:
             continue
         if feed.get("filter", True) and not KIDNEY_WORDS.search(title + " " + desc):
             continue
+        doi = ""
+        m = re.search(r"10\.\d{4,9}/[^\s\"<>]+", _child(e, "identifier", "doi") + " " + link)
+        if m:
+            doi = m.group(0).rstrip(".")
         out.append({
-            "id": "url:" + re.sub(r"[?#].*$", "", link), "kind": feed.get("kind", "news"), "title": title,
-            "abstract": desc[:3000], "journal": feed["name"], "journal_full": feed["name"], "authors": "",
-            "date": date.isoformat() if date else "", "url": link, "doi": "", "pmid": "", "pmcid": "",
-            "pubtypes": [feed.get("kind", "news")], "source": feed["name"], "oa": True,
+            "id": f"doi:{doi.lower()}" if doi else "url:" + re.sub(r"[?#].*$", "", link), "kind": feed.get("kind", "news"),
+            "title": title, "abstract": desc[:3000], "journal": feed["name"], "journal_full": feed["name"], "authors": "",
+            "date": date.isoformat() if date else "", "url": link, "doi": doi, "pmid": "", "pmcid": "",
+            "pubtypes": [feed.get("kind", "news")], "source": feed["name"], "oa": False,
         })
+    print(f"    ({feed['name']}: {len(entries)} Einträge im Feed, {len(out)} passend)")
     return out
 
 

@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>NephroWoche</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NephroWoche">
+<meta name="theme-color" content="#fbfaf6">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Literata:opsz,wght@7..72,500;7..72,700&display=swap">
+<style>
+/* Zeitung für eine Person: oben Kopf + Reiter, auf breiten Schirmen zwei Spalten (Liste | Eintrag),
+   am Handy eine Spalte. Bewusst nur hell, groß, starker Kontrast. */
+:root{
+  --paper:#fbfaf6; --panel:#ffffff; --ink:#1d2427; --muted:#4f5b60; --line:#d9dcd6;
+  --accent:#1f5f74; --accent-soft:#e3eef1; --star:#b0670c; --pd:#1d6b4f; --pd-soft:#e2f1ea;
+  --drug:#7a3e8e; --drug-soft:#f1e7f5; --warn:#8a5a00; --warn-soft:#fbf0d9; --err:#a3262a;
+  --f-text:"Atkinson Hyperlegible",Verdana,system-ui,sans-serif;
+  --f-head:"Literata",Georgia,"Times New Roman",serif;
+  --fs:20px; color-scheme:light;
+}
+html{font-size:var(--fs)}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-text);font-size:1rem;line-height:1.55;margin:0}
+.wrap{max-width:1500px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 3rem}
+header.top{display:flex;flex-wrap:nowrap;align-items:flex-end;justify-content:space-between;gap:.6rem 1.5rem;padding-block:1.2rem .8rem;border-bottom:2px solid var(--ink)}
+.brand{min-width:0}
+.brand h1{font-family:var(--f-head);font-size:1.9rem;margin:0;line-height:1.1;letter-spacing:-.01em}
+.brand p{margin:.2rem 0 0;color:var(--muted);font-size:.85rem}
+.btn{font:inherit;font-size:.85rem;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:.45rem .8rem;cursor:pointer;min-height:44px;display:inline-flex;align-items:center;gap:.4rem;text-decoration:none}
+.btn:hover{border-color:var(--accent)}
+.btn svg{width:22px;height:22px}
+.btn:focus-visible,button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+nav.tabs{display:flex;gap:.25rem;flex-wrap:wrap;margin-block:.8rem 1rem}
+nav.tabs button{font:inherit;font-size:1rem;font-weight:700;border:0;background:none;color:var(--muted);padding:.55rem 1rem;border-radius:999px;cursor:pointer;min-height:48px}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+nav.tabs .count{font-weight:400;opacity:.8}
+.note{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:.6rem .9rem;font-size:.85rem;margin-bottom:1rem}
+.note.err{background:#fbe5e5;color:var(--err)}
+.lead{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem 1.2rem;margin-bottom:1rem}
+.lead h2{font-family:var(--f-head);font-size:1.25rem;margin:0 0 .4rem}
+.lead ol{margin:.2rem 0 .6rem;padding-left:1.3rem}
+.lead li{margin-bottom:.25rem}
+.lead li a{color:inherit;text-decoration:none;cursor:pointer}
+.lead li a:hover b{text-decoration:underline}
+.trend{display:flex;flex-wrap:wrap;gap:.4rem;font-size:.8rem;align-items:center}
+.trend span.t{background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:.15rem .6rem}
+.filters{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.8rem;align-items:center}
+.chip{font:inherit;font-size:.85rem;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:.3rem .8rem;cursor:pointer;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.sep{width:1px;height:28px;background:var(--line);margin-inline:.3rem}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:1.2rem}
+@media (min-width:1000px){.grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr)}.detail{position:sticky;top:1rem;align-self:start;max-height:calc(100vh - 2rem);overflow:auto}}
+.list{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+.item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:.2rem .8rem;align-items:start;background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:.7rem .8rem;cursor:pointer;text-align:left}
+.item.small{padding:.5rem .7rem}
+.item.small h3{font-weight:400;font-size:.95rem}
+.item.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.item.read{opacity:.55}
+.rank{font-family:var(--f-head);font-weight:700;font-size:1.1rem;color:var(--muted);min-width:1.6em;text-align:right;font-variant-numeric:tabular-nums}
+.item h3{font-size:1rem;margin:0;line-height:1.35}
+.item .sub{font-size:.75rem;color:var(--muted);margin-top:.2rem}
+.badges{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.35rem}
+.b{font-size:.7rem;font-weight:700;letter-spacing:.03em;border-radius:5px;padding:.08rem .45rem;background:var(--accent-soft);color:var(--accent)}
+.b.pd{background:var(--pd-soft);color:var(--pd)}
+.b.drug{background:var(--drug-soft);color:var(--drug)}
+.b.warn{background:var(--warn-soft);color:var(--warn)}
+.marks{display:flex;gap:.2rem}
+.icon{font:inherit;border:0;background:none;cursor:pointer;width:44px;height:44px;border-radius:8px;display:grid;place-items:center;color:var(--muted)}
+.icon:hover{background:var(--accent-soft)}
+.icon svg{width:26px;height:26px}
+.icon.on.star{color:var(--star)}
+.icon.on.chk{color:var(--pd)}
+.score{font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.detail{background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:1.2rem 1.4rem;min-width:0}
+.detail h2{font-family:var(--f-head);font-size:1.45rem;line-height:1.25;margin:.2rem 0 .3rem;text-wrap:balance}
+.detail .orig{font-size:.8rem;color:var(--muted);font-style:italic;margin:0 0 .8rem}
+.detail .why{background:var(--accent-soft);border-radius:8px;padding:.6rem .8rem;margin:.8rem 0;font-size:.95rem}
+.detail p{max-width:65ch}
+.facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:.25rem 1rem;font-size:.85rem;margin:.8rem 0;border-top:1px solid var(--line);padding-top:.8rem}
+.facts dt{color:var(--muted)}
+.facts dd{margin:0;overflow-wrap:anywhere}
+.actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem}
+.actions a,.actions button{font:inherit;font-size:.9rem;font-weight:700;text-decoration:none;border-radius:8px;padding:.55rem 1rem;min-height:48px;display:inline-flex;align-items:center;cursor:pointer}
+.primary{background:var(--accent);color:#fff;border:0}
+.secondary{background:var(--panel);color:var(--accent);border:1.5px solid var(--accent)}
+.origbox{margin-top:1rem;background:var(--paper);border:1px dashed var(--line);border-radius:8px;padding:.8rem 1rem;font-size:.9rem;white-space:pre-line}
+.dose{margin-top:1rem;border:1.5px solid var(--drug);border-radius:8px;padding:.7rem .9rem;font-size:.9rem}
+.dose h4{margin:0 0 .3rem;color:var(--drug);font-size:.9rem}
+.dose a{color:var(--drug);font-weight:700}
+.rest{margin-top:1.5rem}
+.rest h2,.page h2{font-family:var(--f-head);font-size:1.2rem;margin:0 0 .5rem}
+.page{background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:1.2rem 1.4rem}
+.event{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.6rem 1rem;border-top:1px solid var(--line);padding-block:.9rem;align-items:start}
+.event:first-of-type{border-top:0}
+.event h3{margin:0;font-size:1rem}
+.event h3 a{color:var(--ink)}
+.event .sub{color:var(--muted);font-size:.8rem}
+.issue{display:flex;justify-content:space-between;gap:1rem;align-items:center;border-top:1px solid var(--line);padding-block:.8rem}
+.issue:first-of-type{border-top:0}
+.issue .sub{color:var(--muted);font-size:.8rem}
+.search{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.search input{font:inherit;flex:1 1 14rem;min-height:48px;border:1.5px solid var(--line);border-radius:8px;padding:.4rem .8rem;background:#fff;color:var(--ink)}
+.empty{color:var(--muted);padding:1rem 0}
+.missing{margin-top:1.5rem;font-size:.9rem}
+.missing textarea{font:inherit;font-size:.9rem;width:100%;box-sizing:border-box;min-height:5rem;border:1.5px solid var(--line);border-radius:8px;padding:.5rem .7rem;margin:.4rem 0}
+footer{margin-top:2rem;font-size:.75rem;color:var(--muted);border-top:1px solid var(--line);padding-top:.8rem;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+dialog{border:1.5px solid var(--line);border-radius:12px;padding:1.2rem 1.4rem;max-width:min(30rem,calc(100vw - 32px));color:var(--ink);background:var(--panel)}
+dialog::backdrop{background:rgba(29,36,39,.35)}
+dialog h2{font-family:var(--f-head);font-size:1.2rem;margin:0 0 .8rem}
+.row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.9rem}
+.welcome{max-width:36rem;margin:3rem auto;text-align:center}
+#printArea{display:none}
+@media (max-width:600px){.brand h1{font-size:1.5rem}.item{grid-template-columns:minmax(0,1fr) auto}.rank{display:none}}
+@media (prefers-reduced-motion:no-preference){.item{transition:border-color .15s,opacity .2s}}
+@media print{
+  html{font-size:12pt}
+  body{background:#fff}
+  body.printing .wrap{display:none}
+  body.printing #printArea{display:block}
+  #printArea article{break-inside:avoid-page;margin-bottom:1.4rem;border-bottom:1px solid #999;padding-bottom:1rem}
+  #printArea h1{font-family:var(--f-head);font-size:18pt;margin:0 0 .2rem}
+  #printArea h2{font-family:var(--f-head);font-size:14pt;margin:.2rem 0}
+  #printArea .orig,#printArea .src{font-size:9pt;color:#444}
+  #printArea a{color:#000}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div id="printArea"></div>
+
+<dialog id="settings">
+  <h2>Einstellungen</h2>
+  <div class="row"><span>Schriftgröße</span>
+    <button class="btn" data-act="fs-" aria-label="Schrift kleiner">A−</button>
+    <button class="btn" data-act="fs+" aria-label="Schrift größer">A+</button>
+    <span id="fsVal" class="score"></span></div>
+  <div class="row"><button class="btn" data-act="print-week">Ausgabe drucken / als PDF</button></div>
+  <p class="score" style="font-size:.8rem">So kommt die App aufs iPhone: Link in Safari öffnen, unten auf „Teilen“ und dann „Zum Home-Bildschirm“. Merkliste und Gelesen-Häkchen sind auf allen Geräten gleich.</p>
+  <div class="row" style="justify-content:flex-end;margin:0"><button class="btn" data-act="close-settings">Schließen</button></div>
+</dialog>
+
+<script src="config.js"></script>
+<script src="demo.js"></script>
+<script>
+const VERSION="1.0";
+const ICON={
+ star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>',
+ starOn:'<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>',
+ chk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.8"/></svg>',
+ chkOn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" fill="currentColor"/><path d="M8 12.5l2.7 2.7L16 9.8" stroke="#fff"/></svg>',
+ gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'
+};
+
+// ---------- Zustand ----------
+const store={get(k,d){try{const v=localStorage.getItem("nw_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("nw_"+k,JSON.stringify(v))}catch(e){}}};
+const params=new URLSearchParams(location.search);
+const DEMO=params.has("demo");
+let token=params.get("k");
+if(token){store.set("token",token);history.replaceState(null,"",location.pathname)}
+else token=store.get("token",null);
+
+const S={tab:"woche",filter:"alle",sort:"wichtig",hideRead:false,sel:null,merkSel:null,searchSel:null,
+ fs:store.get("fs",20),data:null,current:null,starred:null,archive:null,search:null,q:"",
+ loading:true,err:"",missingOpen:false,missingSent:false};
+
+// ---------- Server ----------
+async function rpc(fn,args){
+ if(DEMO) return demoRpc(fn,args);
+ const r=await fetch(NW_CONFIG.supabaseUrl+"/rest/v1/rpc/"+fn,{method:"POST",
+   headers:{apikey:NW_CONFIG.supabaseKey,"Content-Type":"application/json"},body:JSON.stringify(Object.assign({p_token:token},args||{}))});
+ if(!r.ok){let m="";try{m=(await r.json()).message}catch(e){} throw new Error(m||("Fehler "+r.status))}
+ const t=await r.text();return t?JSON.parse(t):null;
+}
+function demoRpc(fn,a){
+ const d=window.NW_DEMO;
+ const st=store.get("demo_state",{});
+ const withState=x=>Object.assign({},x,st[x.id]||{});
+ if(fn==="nw_issue") return Object.assign({},d,{items:d.items.map(withState)});
+ if(fn==="nw_starred") return d.items.map(withState).filter(x=>x.starred);
+ if(fn==="nw_archive") return [{id:"demo",label:d.issue.label,published:d.issue.published,lead:d.issue.lead,count:d.items.length}];
+ if(fn==="nw_search"){const q=(a.p_q||"").toLowerCase();return d.items.map(withState).filter(x=>(x.title+x.sum+x.orig).toLowerCase().includes(q))}
+ if(fn==="nw_set"){const s=st[a.p_item]||{};if(a.p_starred!==null)s.starred=a.p_starred;if(a.p_read!==null)s.read=a.p_read;st[a.p_item]=s;store.set("demo_state",st);return null}
+ return null;
+}
+
+async function loadIssue(id){
+ S.loading=true;S.err="";render();
+ try{
+   const d=await rpc("nw_issue",{p_issue:id||null});
+   S.data=d; if(!id) S.current=d.issue?d.issue.id:null;
+   const top=(d.items||[]).filter(x=>x.tier==="top");
+   S.sel=top.length?top[0].id:null;
+ }catch(e){S.err=e.message}
+ S.loading=false;render();
+}
+async function loadStarred(){try{S.starred=await rpc("nw_starred")}catch(e){S.err=e.message}render()}
+async function loadArchive(){try{S.archive=await rpc("nw_archive")}catch(e){S.err=e.message}render()}
+async function doSearch(q){
+ S.q=q;if(q.trim().length<3){S.search=null;render();return}
+ try{S.search=await rpc("nw_search",{p_q:q});S.searchSel=S.search.length?S.search[0].id:null}catch(e){S.err=e.message}
+ render();
+}
+
+// alle bekannten Kopien eines Eintrags (Woche, Merkliste, Suche) gemeinsam ändern
+function allCopies(id){
+ const out=[];
+ for(const arr of [S.data&&S.data.items,S.starred,S.search]) if(arr) for(const x of arr) if(x.id===id) out.push(x);
+ return out;
+}
+async function setMark(id,field){
+ const copies=allCopies(id);if(!copies.length)return;
+ const val=!copies[0][field];
+ copies.forEach(x=>x[field]=val);
+ if(field==="starred"&&S.starred){
+   if(val&&!S.starred.some(x=>x.id===id)) S.starred.unshift(Object.assign({},copies[0]));
+   if(!val) S.starred=S.starred.filter(x=>x.id!==id);
+ }
+ render();
+ try{await rpc("nw_set",{p_item:id,p_starred:field==="starred"?val:null,p_read:field==="read"?val:null})}
+ catch(e){copies.forEach(x=>x[field]=!val);S.err="Konnte nicht speichern: "+e.message;render()}
+}
+
+// ---------- Hilfen ----------
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function safeUrl(u){return /^https?:\/\//i.test(u||"")?u:"#"}
+function fmtDate(s){if(!s)return"";const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s);if(m)return`${+m[3]}.${+m[2]}.${m[1]}`;return s}
+function fmtWhen(s){if(!s)return"";const d=new Date(s);if(isNaN(d))return s;return d.toLocaleString("de-DE",{weekday:"short",day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit",timeZone:"Europe/Berlin"})+" Uhr"}
+const ALL_TAGS={pd:"pd",peri:"peri",hd:"hd",drug:"drug"};
+
+function visible(items){
+ let xs=items.filter(x=>S.filter==="alle"||(x.tags||[]).includes(S.filter));
+ if(S.hideRead) xs=xs.filter(x=>!x.read||x.id===S.sel);
+ if(S.sort==="trend") xs=[...xs].sort((a,b)=>b.trend-a.trend||b.score-a.score);
+ return xs;
+}
+function badgesHtml(x){return (x.badges||[]).map(b=>`<span class="b ${esc(b[1])}">${esc(b[0])}</span>`).join("")}
+function itemRow(x,i,selId,small){
+ const src=(x.src||"").split(" · ").slice(1,2).join("")||(x.src||"").split(" · ")[0];
+ return `<div class="item${small?" small":""}${x.id===selId?" sel":""}${x.read?" read":""}" data-id="${esc(x.id)}" role="button" tabindex="0" aria-label="${esc(x.title)}">
+  <div class="rank">${small?"•":i+1}</div>
+  <div style="min-width:0"><h3>${esc(x.title)}</h3>${small?(src?`<div class="sub">${esc(src)}</div>`:""):`<div class="sub">${esc(src)}</div>
+   <div class="badges">${badgesHtml(x)}<span class="score">Wichtigkeit ${Math.round(x.score)}/10</span></div>`}</div>
+  <div class="marks">
+   <button class="icon star${x.starred?" on":""}" data-star="${esc(x.id)}" title="${x.starred?"Nicht mehr merken":"Merken"}" aria-label="Merken" aria-pressed="${!!x.starred}">${x.starred?ICON.starOn:ICON.star}</button>
+   <button class="icon chk${x.read?" on":""}" data-read="${esc(x.id)}" title="${x.read?"Als ungelesen markieren":"Als gelesen abhaken"}" aria-label="Gelesen" aria-pressed="${!!x.read}">${x.read?ICON.chkOn:ICON.chk}</button>
+  </div></div>`;
+}
+function detailHtml(x){
+ if(!x) return `<p class="empty">Eintrag anklicken, um die Zusammenfassung zu lesen.</p>`;
+ const body=x.sum||x.one;
+ const drugs=(x.drugs||[]).filter(Boolean);
+ return `<div class="badges">${badgesHtml(x)}</div>
+  <h2>${esc(x.title)}</h2>
+  ${x.orig?`<p class="orig">${esc(x.orig)}</p>`:""}
+  <p>${esc(body)}</p>
+  ${x.why?`<div class="why"><b>Für die Praxis:</b> ${esc(x.why)}</div>`:""}
+  ${drugs.length?`<div class="dose"><h4>Dosierung bei eingeschränkter Nierenfunktion</h4>
+    ${esc(drugs.join(", "))}: Dosierung nach eGFR, bei Hämodialyse und PD bitte in der Fachinformation oder bei
+    <a href="https://dosing.de" target="_blank" rel="noopener">dosing.de</a> nachsehen
+    (<a href="https://www.fachinfo.de" target="_blank" rel="noopener">fachinfo.de</a>). Die App nennt bewusst keine geschätzten Dosen.</div>`:""}
+  <dl class="facts">${x.src?`<dt>Zitat</dt><dd>${esc(x.src)}</dd>`:""}${(x.facts||[]).map(f=>`<dt>${esc(f[0])}</dt><dd>${esc(f[0]==="Erschienen"?fmtDate(f[1]):f[1])}</dd>`).join("")}</dl>
+  <div class="actions">
+   <a class="primary" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener">Quelle öffnen</a>
+   ${x.full&&x.full!==x.url?`<a class="secondary" href="${esc(safeUrl(x.full))}" target="_blank" rel="noopener">Volltext${x.oa?" (frei)":""}</a>`:""}
+   ${x.abstract?`<button class="secondary" data-orig="${esc(x.id)}">Originaltext</button>`:""}
+   <button class="secondary" data-star="${esc(x.id)}">${x.starred?"Gemerkt ★":"Merken"}</button>
+   <button class="secondary" data-read="${esc(x.id)}">${x.read?"Gelesen ✓":"Als gelesen abhaken"}</button>
+   <button class="secondary" data-print="${esc(x.id)}">Drucken / PDF</button>
+  </div>
+  <div class="origbox" id="ob-${esc(x.id)}" hidden><b>Originaltext (englisch)</b>\n${esc(x.abstract)}</div>`;
+}
+
+// ---------- Ansichten ----------
+function viewWeek(){
+ const d=S.data;
+ if(!d||!d.issue) return `<div class="page"><h2>Noch keine Ausgabe</h2><p>Die erste Ausgabe erscheint nach dem nächsten Wochenlauf in der Nacht auf Montag.</p></div>`;
+ const items=d.items||[];
+ const top=visible(items.filter(x=>x.tier==="top"));
+ const rest=visible(items.filter(x=>x.tier==="list"));
+ const old=S.current&&d.issue.id!==S.current;
+ const lead=d.issue.lead||[], trends=d.issue.trends||[];
+ return `${old?`<div class="note">Sie sehen eine frühere Ausgabe (${esc(d.issue.label)}). <button class="chip" data-act="current">Zur aktuellen Ausgabe</button></div>`:""}
+  ${lead.length?`<div class="lead"><h2>Das Wichtigste der Woche</h2><ol>${lead.map(l=>`<li><a data-goto="${esc(l.id)}"><b>${esc(l.title)}:</b> ${esc(l.text)}</a></li>`).join("")}</ol>
+   ${trends.length?`<div class="trend"><b>Im Trend:</b> ${trends.map(t=>`<span class="t">${esc(t.topic)} (${t.count})</span>`).join("")}</div>`:""}</div>`:""}
+  <div class="filters" role="group" aria-label="Filter">
+   ${[["alle","Alle"],["pd","Nur PD"],["peri","Peritonitis"],["hd","Hämodialyse"],["drug","Medikamente"]].map(f=>`<button class="chip" data-f="${f[0]}" aria-pressed="${S.filter===f[0]}">${f[1]}</button>`).join("")}
+   <span class="sep" aria-hidden="true"></span>
+   <button class="chip" data-s="wichtig" aria-pressed="${S.sort==="wichtig"}">Nach Wichtigkeit</button>
+   <button class="chip" data-s="trend" aria-pressed="${S.sort==="trend"}">Nach Trend</button>
+   <span class="sep" aria-hidden="true"></span>
+   <button class="chip" data-act="hideRead" aria-pressed="${S.hideRead}">Gelesene ausblenden</button>
+  </div>
+  <div class="grid">
+   <div>
+    <div class="list">${top.length?top.map((x,i)=>itemRow(x,i,S.sel)).join(""):`<p class="empty">Keine Einträge für diesen Filter.</p>`}</div>
+    ${rest.length?`<div class="rest"><h2>Außerdem diese Woche</h2><div class="list">${rest.map((x,i)=>itemRow(x,i,S.sel,true)).join("")}</div></div>`:""}
+    ${missingHtml()}
+   </div>
+   <article class="detail" id="detail" aria-live="polite">${detailHtml(items.find(x=>x.id===S.sel))}</article>
+  </div>`;
+}
+function missingHtml(){
+ if(DEMO) return "";
+ if(S.missingSent) return `<p class="missing">Danke, der Hinweis ist angekommen.</p>`;
+ if(!S.missingOpen) return `<p class="missing"><button class="chip" data-act="missing">Fehlt etwas Wichtiges?</button></p>`;
+ return `<div class="missing"><label for="missingText"><b>Was fehlt?</b> Titel, Link oder Stichwort genügt.</label>
+  <textarea id="missingText" maxlength="2000"></textarea>
+  <button class="btn" data-act="missing-send">Absenden</button> <button class="btn" data-act="missing-cancel">Abbrechen</button></div>`;
+}
+function viewMerk(){
+ if(S.starred===null) return `<p class="empty">Lädt …</p>`;
+ const ms=S.starred;
+ if(!ms.length) return `<div class="page"><p class="empty" style="padding:0">Noch nichts gemerkt. Bei einem Eintrag auf den Stern tippen.</p></div>`;
+ const sel=ms.find(x=>x.id===S.merkSel)||ms[0];
+ return `<div class="filters"><button class="btn" data-act="print-merk">Merkliste drucken / als PDF</button></div>
+  <div class="grid"><div class="list">${ms.map((x,i)=>itemRow(x,i,sel.id)).join("")}</div>
+  <article class="detail">${detailHtml(sel)}</article></div>`;
+}
+function viewFort(){
+ const evs=(S.data&&S.data.events)||[];
+ return `<div class="page"><h2>Online-Fortbildungen passend zur Woche</h2>
+  <p class="score" style="font-size:.8rem;margin-top:0">Vom Wochenlauf im Netz gesucht. Termin und CME-Punkte bitte auf der Seite des Veranstalters prüfen.</p>
+  ${evs.length?evs.map((e,i)=>`<div class="event"><div><h3><a href="${esc(safeUrl(e.url))}" target="_blank" rel="noopener">${esc(e.title)}</a></h3>
+   <div class="sub">${esc([e.org,fmtWhen(e.start),e.cme].filter(Boolean).join(" · "))}</div>
+   ${e.matches?`<div class="sub">Passt zu: ${esc(e.matches)}</div>`:""}</div>
+   ${e.start?`<button class="btn" data-ics="${i}">In Kalender</button>`:""}</div>`).join(""):`<p class="empty">Diese Woche wurden keine passenden Online-Termine gefunden.</p>`}</div>`;
+}
+function viewArchiv(){
+ const res=S.search;
+ let searchPart="";
+ if(res){
+   const sel=res.find(x=>x.id===S.searchSel)||res[0];
+   searchPart=res.length?`<div class="grid" style="margin-top:1rem"><div class="list">${res.map((x,i)=>itemRow(x,i,sel&&sel.id)).join("")}</div><article class="detail">${detailHtml(sel)}</article></div>`
+     :`<p class="empty">Nichts gefunden zu „${esc(S.q)}“.</p>`;
+ }
+ const arc=S.archive;
+ return `<div class="page"><h2>Suchen in allen Ausgaben</h2>
+  <form class="search" data-form="search"><input id="q" type="search" placeholder="z. B. Peritonitis, Icodextrin, Finerenon" value="${esc(S.q)}" aria-label="Suchbegriff"><button class="btn" type="submit">Suchen</button></form>
+  ${searchPart}</div>
+  ${res?"":`<div class="page" style="margin-top:1rem"><h2>Frühere Ausgaben</h2>
+  ${arc===null?`<p class="empty">Lädt …</p>`:arc.length?arc.map(a=>`<div class="issue"><div><b>${esc(a.label)}</b><div class="sub">${a.count} Einträge${a.lead&&a.lead[0]?" · "+esc(a.lead[0].title):""}</div></div>
+   <button class="btn" data-issue="${esc(a.id)}">Öffnen</button></div>`).join(""):`<p class="empty">Noch keine Ausgaben.</p>`}</div>`}`;
+}
+
+function render(){
+ document.documentElement.style.setProperty("--fs",S.fs+"px");
+ const fsv=document.getElementById("fsVal");if(fsv)fsv.textContent=S.fs+" px";
+ const app=document.getElementById("app");
+ if(!DEMO&&(!token||!window.NW_CONFIG||!NW_CONFIG.supabaseUrl||NW_CONFIG.supabaseUrl.includes("HIER"))){
+   app.innerHTML=`<div class="welcome"><h1 style="font-family:var(--f-head)">NephroWoche</h1>
+    <p>Bitte den persönlichen Link aus der E-Mail öffnen.</p><p><a href="?demo">Beispielausgabe ansehen</a></p></div>`;return;
+ }
+ const label=S.data&&S.data.issue?S.data.issue.label:"";
+ const name=S.data&&S.data.reader?S.data.reader:"";
+ const nStar=S.starred?S.starred.length:((S.data&&S.data.items)||[]).filter(x=>x.starred).length;
+ let body="";
+ if(S.loading&&!S.data) body=`<p class="empty">Lädt …</p>`;
+ else if(S.tab==="woche") body=viewWeek();
+ else if(S.tab==="merk") body=viewMerk();
+ else if(S.tab==="fort") body=viewFort();
+ else body=viewArchiv();
+ app.innerHTML=`<header class="top"><div class="brand"><h1>NephroWoche</h1>
+   <p>${esc([label?"Ausgabe "+label:"",name?"für "+name:""].filter(Boolean).join(" · "))}</p></div>
+   <button class="btn" data-act="settings" aria-label="Einstellungen" title="Einstellungen">${ICON.gear}</button></header>
+  <nav class="tabs" role="tablist" aria-label="Bereiche">
+   ${[["woche","Diese Woche"],["merk","Merkliste"],["fort","Fortbildungen"],["archiv","Archiv"]].map(t=>`<button role="tab" data-tab="${t[0]}" aria-selected="${S.tab===t[0]}">${t[1]}${t[0]==="merk"&&nStar?` <span class="count">(${nStar})</span>`:""}</button>`).join("")}
+  </nav>
+  ${DEMO?`<div class="note">Beispielausgabe mit Daten aus dem Klick-Dummy (keine echte Wochenausgabe). Merken und Gelesen werden hier nur in diesem Browser gespeichert.</div>`:""}
+  ${S.err?`<div class="note err">${esc(S.err)} <button class="chip" data-act="retry">Neu laden</button></div>`:""}
+  ${body}
+  <footer><span>KI-Zusammenfassungen aus Abstracts ersetzen nicht das Original. Jeder Eintrag verlinkt seine Quelle.</span><span>Version ${VERSION}</span></footer>`;
+}
+
+// ---------- Drucken / PDF ----------
+function printItems(title,items){
+ const area=document.getElementById("printArea");
+ area.innerHTML=`<h1>${esc(title)}</h1><p class="src">NephroWoche · gedruckt am ${new Date().toLocaleDateString("de-DE")}</p>`+
+  items.map(x=>`<article><h2>${esc(x.title)}</h2>${x.orig?`<div class="orig">${esc(x.orig)}</div>`:""}<div class="src">${esc(x.src)}</div>
+   <p>${esc(x.sum||x.one)}</p>${x.why?`<p><b>Für die Praxis:</b> ${esc(x.why)}</p>`:""}<p class="src">Quelle: ${esc(x.url)}</p></article>`).join("");
+ document.body.classList.add("printing");
+ setTimeout(()=>{window.print();},50);
+}
+window.addEventListener("afterprint",()=>document.body.classList.remove("printing"));
+
+// ---------- Kalender (.ics) ----------
+function icsDate(s){const d=new Date(s);return d.toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,"")}
+function downloadIcs(e){
+ const start=new Date(e.start);const end=e.end?new Date(e.end):new Date(start.getTime()+90*60000);
+ const fold=s=>String(s).replace(/[\\;,]/g,m=>"\\"+m).replace(/\n/g,"\\n");
+ const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//NephroWoche//DE","CALSCALE:GREGORIAN","BEGIN:VEVENT",
+  "UID:"+Date.now()+"@nephrowoche","DTSTAMP:"+icsDate(new Date().toISOString()),"DTSTART:"+icsDate(start.toISOString()),"DTEND:"+icsDate(end.toISOString()),
+  "SUMMARY:"+fold(e.title),"DESCRIPTION:"+fold([e.org,e.cme,e.url].filter(Boolean).join("\n")),"URL:"+e.url,"LOCATION:Online",
+  "BEGIN:VALARM","TRIGGER:-PT30M","ACTION:DISPLAY","DESCRIPTION:"+fold(e.title),"END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));
+ a.download="Fortbildung.ics";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+}
+
+// ---------- Bedienung ----------
+function scrollDetail(){if(window.innerWidth<1000){const d=document.querySelector(".detail");if(d)d.scrollIntoView({behavior:"smooth",block:"start"})}}
+document.addEventListener("click",e=>{
+ const t=e.target.closest("button,[data-id],[data-goto]");if(!t)return;
+ const ds=t.dataset;
+ if(ds.star){e.stopPropagation();setMark(ds.star,"starred");return}
+ if(ds.read){e.stopPropagation();setMark(ds.read,"read");return}
+ if(ds.orig){const ob=document.getElementById("ob-"+ds.orig);if(ob)ob.hidden=!ob.hidden;return}
+ if(ds.print){const x=allCopies(ds.print)[0];if(x)printItems("NephroWoche",[x]);return}
+ if(ds.ics){downloadIcs(S.data.events[+ds.ics]);return}
+ if(ds.issue){S.tab="woche";S.filter="alle";loadIssue(ds.issue);return}
+ if(ds.goto){S.sel=ds.goto;S.filter="alle";render();scrollDetail();return}
+ if(ds.tab){S.tab=ds.tab;S.err="";if(ds.tab==="merk")loadStarred();if(ds.tab==="archiv"&&S.archive===null)loadArchive();render();return}
+ if(ds.f){S.filter=ds.f;render();return}
+ if(ds.s){S.sort=ds.s;render();return}
+ const act=ds.act;
+ if(act==="hideRead"){S.hideRead=!S.hideRead;render();return}
+ if(act==="settings"){document.getElementById("settings").showModal();render();return}
+ if(act==="close-settings"){document.getElementById("settings").close();return}
+ if(act==="fs+"){S.fs=Math.min(28,S.fs+2);store.set("fs",S.fs);render();return}
+ if(act==="fs-"){S.fs=Math.max(16,S.fs-2);store.set("fs",S.fs);render();return}
+ if(act==="current"){loadIssue(null);return}
+ if(act==="retry"){S.err="";loadIssue(S.data&&S.data.issue&&S.data.issue.id!==S.current?S.data.issue.id:null);return}
+ if(act==="print-merk"){printItems("NephroWoche – Merkliste",S.starred||[]);return}
+ if(act==="print-week"){document.getElementById("settings").close();const its=(S.data&&S.data.items||[]).filter(x=>x.tier==="top");printItems("NephroWoche "+(S.data&&S.data.issue?S.data.issue.label:""),its);return}
+ if(act==="missing"){S.missingOpen=true;render();const ta=document.getElementById("missingText");if(ta)ta.focus();return}
+ if(act==="missing-cancel"){S.missingOpen=false;render();return}
+ if(act==="missing-send"){const v=(document.getElementById("missingText").value||"").trim();if(v.length<3)return;
+   rpc("nw_report_missing",{p_text:v}).then(()=>{S.missingSent=true;render()}).catch(err=>{S.err=err.message;render()});return}
+ if(ds.id){
+   if(S.tab==="merk")S.merkSel=ds.id;else if(S.tab==="archiv")S.searchSel=ds.id;else S.sel=ds.id;
+   render();scrollDetail();
+ }
+});
+document.addEventListener("submit",e=>{if(e.target.dataset.form==="search"){e.preventDefault();doSearch(document.getElementById("q").value)}});
+document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.dataset&&e.target.dataset.id){e.preventDefault();e.target.click()}});
+
+render();
+if(DEMO||token){loadIssue(null);loadStarred()}
+</script>
+</body>
+</html>
